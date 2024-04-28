@@ -1,3 +1,4 @@
+import javax.sound.sampled.Line;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -7,7 +8,18 @@ public class InvoiceGenerator
     private static ArrayList<Invoice> invoices = new ArrayList<Invoice>();
     private static Scanner scanner = new Scanner(System.in);
 
-    public static void main(String[] args)
+    public InvoiceGenerator()
+    {
+        invoices = new ArrayList<Invoice>();
+        scanner = new Scanner(System.in);
+    }
+
+    public ArrayList<Invoice> getInvoices()
+    {
+        return invoices;
+    }
+
+    public void generateInvoices()
     {
         boolean exit = false;
 
@@ -15,29 +27,40 @@ public class InvoiceGenerator
         {
             displayMenu();
             int choice = scanner.nextInt();
+            scanner.nextLine();  //consume the remaining newLine character
 
             switch(choice)
             {
                 case 1:
                     createInvoice();
                     break;
+                case 2:
+                    displayInvoices();
+                    break;
+                case 3:
+                    exit = true;
+                    System.out.println("Exiting the application.....");
+                    break;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+
             }
 
         }
     }
 
-    private static void displayMenu()
+    public void displayMenu()
     {
         System.out.println("Welcome to the Invoice Generator");
         System.out.println("1. Create a new invoice");
-        System.out.println("2. Add a line item to an invoice");
-        System.out.println("3. Generate an invoice");
-        System.out.println("4. Exit");
-        System.out.println("Enter your choice");
+        System.out.println("2. Display Invoices");
+        System.out.println("3. Exit");
+        System.out.println("Enter your choice: ");
     }
 
-    private static void createInvoice()
+    public void createInvoice()
     {
+        //Prompt the user for invoice details
         System.out.println("Enter id of the client:");
         int clientId = scanner.nextInt();
         scanner.nextLine();
@@ -64,7 +87,67 @@ public class InvoiceGenerator
         LocalDate dueDate = LocalDate.parse(scanner.nextLine());
 
         Invoice invoice = new Invoice(invoiceId, client, invoiceDate, dueDate);
-        invoices.add(invoice); //add invoice to the list of invoices
 
+        //Prompt the user for more line items
+        boolean addMoreLineItems = true;
+
+        while(addMoreLineItems)
+        {
+            System.out.println("Enter the service name: ");
+            String serviceName = scanner.nextLine();
+
+
+            System.out.println("Enter the description of service:");
+            String descriptionService = scanner.nextLine();
+
+            System.out.println("Enter the hourly rate: ");
+            double hourlyRate = scanner.nextDouble();
+            scanner.nextLine();
+
+            System.out.println("Enter the quantity:");
+            int quantity = scanner.nextInt();
+            scanner.nextLine();
+
+            Service service = new Service(serviceName, descriptionService, hourlyRate);
+
+            LineItem lineItem = new LineItem(service, quantity);
+            lineItem.calculateSubtotal(quantity);
+            invoice.addLineItems(lineItem);
+
+            System.out.println("Add more line items? (Y/N): ");
+            String choice = scanner.nextLine();
+            addMoreLineItems = choice.equalsIgnoreCase("Y");
+        }
+
+        invoice.calculateTotalAmount();
+
+        //Generate the invoice
+        String invoiceString = invoice.generateInvoice();
+        System.out.println(invoiceString);
+
+        invoices.add(invoice);
     }
+
+
+    public void displayInvoices()
+    {
+        if(invoices.isEmpty())
+        {
+            System.out.println("There are no invoices to display");
+        }
+        else
+        {
+            for (Invoice invoice : invoices)
+            {
+                //Display invoice details
+                String invoiceString = invoice.generateInvoice();
+                System.out.println(invoiceString);
+                System.out.println("---------------------------");
+
+            }
+
+        }
+    }
+
+
 }
