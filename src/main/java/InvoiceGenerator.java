@@ -1,7 +1,20 @@
+import com.lowagie.text.*;
+import com.lowagie.text.Document;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
+
 import javax.sound.sampled.Line;
+import javax.swing.event.DocumentListener;
+import javax.swing.event.UndoableEditListener;
+import javax.swing.text.*;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.io.FileNotFoundException;
 
 public class InvoiceGenerator
 {
@@ -147,6 +160,62 @@ public class InvoiceGenerator
             }
 
         }
+    }
+
+    public void saveInvoiceAsPDF(Invoice invoice, String filename) throws FileNotFoundException
+    {
+        try(Document document = new Document())
+        {
+            PdfWriter.getInstance(document, new FileOutputStream(filename));
+            document.open();
+
+            // Add invoice details to the PDF document
+            document.add(new Paragraph("Invoice ID:" + invoice.getId()));
+            document.add(new Paragraph("Client: " + invoice.getClient().getName()));
+            document.add(new Paragraph("Invoice Date: " + invoice.getInvoiceDate()));
+            document.add(new Paragraph("Due Date: " + invoice.getDueDate()));
+            document.add(new Paragraph(" "));
+
+            // Add line items table to the PDF document
+            PdfPTable table = new PdfPTable(4);
+            table.setWidthPercentage(100);
+            table.setSpacingBefore(10f);
+            table.setSpacingAfter(10f);
+
+            PdfPCell cell1 = new PdfPCell(new Paragraph("Service Name"));
+            PdfPCell cell2 = new PdfPCell(new Paragraph("Description"));
+            PdfPCell cell3 = new PdfPCell(new Paragraph("Quantity"));
+            PdfPCell cell4 = new PdfPCell(new Paragraph("Subtotal"));
+
+            table.addCell(cell1);
+            table.addCell(cell2);
+            table.addCell(cell3);
+            table.addCell(cell4);
+
+            for (LineItem lineItem : invoice.getLineItems())
+            {
+                table.addCell(lineItem.getService().getServiceName());
+                table.addCell(lineItem.getService().getDescription());
+                table.addCell(String.valueOf(lineItem.getQuantity()));
+                table.addCell(String.format("%.2f", lineItem.calculateSubtotal(lineItem.getQuantity())));
+            }
+
+            document.add(table);
+
+            document.add(new Paragraph(" "));
+            document.add(new Paragraph("Total: " + String.format("%.2f", invoice.getTotalAmount())));
+            document.add(new Paragraph(" "));
+            document.add(new Paragraph("Thank you for your business!"));
+
+            document.close();
+            System.out.println("Invoice saved as PDF successfully!");
+        }
+        catch (Exception e)
+        {
+            System.out.println("Error saving invoice as PDF: " + e.getMessage());
+        }
+
+
     }
 
 
