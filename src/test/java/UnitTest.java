@@ -1,10 +1,11 @@
 import org.junit.Test;
-
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.io.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class UnitTest {
     @Test
@@ -155,6 +156,23 @@ public class UnitTest {
 
         assertEquals(expectedInvoice, invoice.generateInvoice());
 
+    }
+
+    @Test
+    public void testGetConnection()
+    {
+        try
+        {
+            Connection connection = DatabaseConnection.getConnection();
+            assertNotNull(connection);
+
+
+            connection.close();
+        }
+        catch (SQLException e)
+        {
+            fail("Exception occurred while connecting to the database " + e.getMessage());
+        }
     }
 
 }
